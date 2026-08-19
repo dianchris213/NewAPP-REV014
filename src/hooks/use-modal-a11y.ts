@@ -27,15 +27,22 @@ export function useModalA11y<T extends HTMLElement = HTMLDivElement>(
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
     // Move focus into the dialog on open (autofocus target wins, else first focusable).
-    const raf = requestAnimationFrame(() => {
+    // Portalled sheets mount a frame later, so retry for a few frames.
+    let raf = 0;
+    let attempts = 0;
+    const focusIn = () => {
       const root = containerRef.current;
-      if (!root) return;
+      if (!root || !root.isConnected) {
+        if (attempts++ < 10) raf = requestAnimationFrame(focusIn);
+        return;
+      }
       if (root.contains(document.activeElement)) return;
       const preferred = root.querySelector<HTMLElement>("[data-autofocus]");
       const target = preferred ?? focusable(root)[0] ?? root;
       if (target === root && !root.hasAttribute("tabindex")) root.setAttribute("tabindex", "-1");
       target.focus?.();
-    });
+    };
+    raf = requestAnimationFrame(focusIn);
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
