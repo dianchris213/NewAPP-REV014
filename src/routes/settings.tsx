@@ -464,7 +464,7 @@ function CategorySheet({ onClose }: { onClose: () => void }) {
                 : copy.allAccounts;
               const used = categoryUsage(c.id);
               const editing = editingId === c.id;
-              const message = rowError?.id === c.id ? rowError.message : null;
+              const message = rowError && rowError.id === c.id ? rowError.message : null;
               return (
                 <li
                   key={c.id}
@@ -567,8 +567,11 @@ function CategorySheet({ onClose }: { onClose: () => void }) {
               );
             })
           ) : (
-            <li className="py-4 text-center text-[12px] text-on-surface-variant/70">
-              {copy.categoriesEmpty}
+            <li
+              data-testid="category-empty"
+              className="py-4 text-center text-[12px] text-on-surface-variant/70"
+            >
+              {query.trim() ? copy.noCategoryResults : copy.categoriesEmpty}
             </li>
           )}
         </ul>
