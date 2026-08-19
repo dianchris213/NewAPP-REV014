@@ -236,6 +236,10 @@ function SettingsPage() {
   );
 }
 
+type CategorySort = "name-asc" | "name-desc" | "most-used";
+
+const CATEGORY_SORTS: CategorySort[] = ["name-asc", "name-desc", "most-used"];
+
 /** Manage user-owned transaction categories (empty by default). */
 function CategorySheet({ onClose }: { onClose: () => void }) {
   const {
