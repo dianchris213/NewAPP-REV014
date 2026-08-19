@@ -11,8 +11,12 @@ function focusable(root: HTMLElement | null): HTMLElement[] {
 }
 
 /**
- * Bank-grade modal accessibility: Esc closes, Tab is trapped inside the
- * container, and focus returns to the opener element on close.
+ * Bank-grade modal accessibility: focus moves into the dialog on open, Esc
+ * closes, Tab/Shift+Tab are trapped inside the container, and focus returns to
+ * the opener element on close.
+ *
+ * `onClose` is read through a ref so inline handlers cannot re-run the effect
+ * on every render (which would bounce focus back to the opener).
  */
 export function useModalA11y<T extends HTMLElement = HTMLDivElement>(
   open: boolean,
@@ -20,20 +24,21 @@ export function useModalA11y<T extends HTMLElement = HTMLDivElement>(
 ) {
   const containerRef = useRef<T | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
     openerRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-    // Move focus into the dialog on open (autofocus target wins, else first focusable).
     // Portalled sheets mount a frame later, so retry for a few frames.
     let raf = 0;
     let attempts = 0;
     const focusIn = () => {
       const root = containerRef.current;
       if (!root || !root.isConnected) {
-        if (attempts++ < 10) raf = requestAnimationFrame(focusIn);
+        if (attempts++ < 20) raf = requestAnimationFrame(focusIn);
         return;
       }
       if (root.contains(document.activeElement)) return;
@@ -48,7 +53,7 @@ export function useModalA11y<T extends HTMLElement = HTMLDivElement>(
       if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
-        onClose?.();
+        closeRef.current?.();
         return;
       }
       if (e.key !== "Tab") return;
@@ -81,7 +86,7 @@ export function useModalA11y<T extends HTMLElement = HTMLDivElement>(
         requestAnimationFrame(() => opener.focus?.());
       }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return containerRef;
 }
