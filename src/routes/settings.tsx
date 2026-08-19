@@ -420,7 +420,43 @@ function CategorySheet({ onClose }: { onClose: () => void }) {
           {status}
         </p>
 
-        <ul className="mt-4 list-none rounded-2xl bg-surface-container px-4 py-1">
+        <div className="mt-4 flex items-center gap-2">
+          <label className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="sr-only">{copy.searchCategories}</span>
+            <input
+              type="search"
+              value={query}
+              maxLength={40}
+              placeholder={copy.searchCategories}
+              aria-label={copy.searchCategories}
+              data-testid="category-search"
+              onChange={(e) => setQuery(e.target.value)}
+              className="h-11 w-full rounded-2xl border border-outline-variant/30 bg-surface-container px-4 text-[14px] text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="sr-only">{copy.sortLabel}</span>
+            <select
+              value={sort}
+              aria-label={copy.sortLabel}
+              data-testid="category-sort"
+              onChange={(e) => setSort(e.target.value as CategorySort)}
+              className="h-11 rounded-2xl border border-outline-variant/30 bg-surface-container px-3 text-[13px] text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            >
+              {CATEGORY_SORTS.map((option) => (
+                <option key={option} value={option}>
+                  {option === "name-asc"
+                    ? copy.sortNameAsc
+                    : option === "name-desc"
+                      ? copy.sortNameDesc
+                      : copy.sortMostUsed}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <ul className="mt-3 list-none rounded-2xl bg-surface-container px-4 py-1">
           {list.length ? (
             list.map((c) => {
               const scope = c.walletId
