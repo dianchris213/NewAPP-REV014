@@ -26,6 +26,17 @@ export function useModalA11y<T extends HTMLElement = HTMLDivElement>(
     openerRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
+    // Move focus into the dialog on open (autofocus target wins, else first focusable).
+    const raf = requestAnimationFrame(() => {
+      const root = containerRef.current;
+      if (!root) return;
+      if (root.contains(document.activeElement)) return;
+      const preferred = root.querySelector<HTMLElement>("[data-autofocus]");
+      const target = preferred ?? focusable(root)[0] ?? root;
+      if (target === root && !root.hasAttribute("tabindex")) root.setAttribute("tabindex", "-1");
+      target.focus?.();
+    });
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -55,6 +66,7 @@ export function useModalA11y<T extends HTMLElement = HTMLDivElement>(
 
     document.addEventListener("keydown", onKeyDown, true);
     return () => {
+      cancelAnimationFrame(raf);
       document.removeEventListener("keydown", onKeyDown, true);
       const opener = openerRef.current;
       openerRef.current = null;
